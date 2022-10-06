@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 from wishlist.models import BarangWishlist
 import datetime
 
@@ -13,12 +14,34 @@ import datetime
 @login_required(login_url='/wishlist/login/')
 def show_wishlist(req):
     data_barang_wishlist = BarangWishlist.objects.all()
+    print(data_barang_wishlist)
     context = {
         'list_barang': data_barang_wishlist,
         'nama': 'Bona',
         'last_login': req.COOKIES['last_login'],
     }
     return render(req, "wishlist.html", context)
+
+@login_required(login_url='/wishlist/login/')
+def wishlist_ajax(req):
+    context = {
+        'nama': 'Bona',
+        'last_login': req.COOKIES['last_login'],
+    }
+    return render(req, "wishlist_ajax.html", context)
+
+@login_required(login_url='/wishlist/login/')
+@csrf_exempt
+def add_wishlist(req):
+    if req.method == "POST":
+        nama = req.POST.get("nama")
+        harga = req.POST.get("harga")
+        deskripsi = req.POST.get("deskripsi")
+        BarangWishlist.objects.create(nama_barang=nama, harga_barang=harga, deskripsi=deskripsi)
+        return HttpResponse()
+    else:
+        print("here")
+        return redirect("wishlist:show_wishlist")
 
 def show_wishlist_xml(req):
     data_barang_wishlist = BarangWishlist.objects.all()
